@@ -35,6 +35,17 @@ func TestAnd(t *testing.T) {
 	}
 }
 
+func TestOr(t *testing.T) {
+	typed := " || "
+	tokens, err := Tokenize(typed)
+	if err != nil {
+		t.Error(err)
+	}
+	if len(tokens) != 1 || tokens[0].which != OR {
+		t.Error("should tokenize an OR")
+	}
+}
+
 func TestCommand(t *testing.T) {
 	typed := "ls"
 	tokens, err := Tokenize(typed)
@@ -42,15 +53,6 @@ func TestCommand(t *testing.T) {
 		t.Error(err)
 	}
 	if len(tokens) != 1 || tokens[0].which != COMMAND || tokens[0].value != "ls" {
-		t.Error("should tokenize a CMD")
-	}
-
-	typed = "pwd"
-	tokens, err = Tokenize(typed)
-	if err != nil {
-		t.Error(err)
-	}
-	if len(tokens) != 1 || tokens[0].which != COMMAND || tokens[0].value != "pwd" {
 		t.Error("should tokenize a CMD")
 	}
 }

@@ -24,6 +24,10 @@ func buildAndNode() *AST {
 	return newNode(AND)
 }
 
+func buildOrNode() *AST {
+	return newNode(OR)
+}
+
 func buildCommandNode(tokens []Token) (*AST, error) {
 	var root *AST = newNode(COMMAND)
 
@@ -54,11 +58,11 @@ func buildASTRoot(tokens []Token) (*AST, error) {
 		case AND:
 			{
 				if root == nil {
-					return nil, SyntaxError(currentToken.column, "and to have left side", "nothing")
+					return nil, SyntaxError(currentToken.column, "AND to have left side", "nothing")
 				}
 				var remainingTokens = tokens[i+1:]
 				if len(remainingTokens) == 0 {
-					return nil, SyntaxError(currentToken.column, "and to have right side", "nothing")
+					return nil, SyntaxError(currentToken.column, "AND to have right side", "nothing")
 				}
 				var newRoot *AST = buildAndNode()
 				newRoot.left = root
@@ -69,6 +73,29 @@ func buildASTRoot(tokens []Token) (*AST, error) {
 				newRoot.right = rightNode
 				root = newRoot
 				i += 1 + 1 + len(rightNode.args) // AND + BIN + ARGS
+			}
+		case OR:
+			{
+				if root == nil {
+					return nil, SyntaxError(currentToken.column, "OR to have left side", "nothing")
+				}
+				var remainingTokens = tokens[i+1:]
+				if len(remainingTokens) == 0 {
+					return nil, SyntaxError(currentToken.column, "OR to have right side", "nothing")
+				}
+				var newRoot *AST = buildOrNode()
+				newRoot.left = root
+				rightNode, err := buildCommandNode(remainingTokens)
+				if err != nil {
+					return nil, err
+				}
+				newRoot.right = rightNode
+				root = newRoot
+				i += 1 + 1 + len(rightNode.args) // OR + BIN + ARGS
+			}
+		default:
+			{
+				i++
 			}
 
 		}

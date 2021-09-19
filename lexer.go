@@ -6,8 +6,10 @@ import (
 )
 
 const AND_SYMBOL = '&'
+const OR_SYMBOL = '|'
 
 const AND = "AND"
+const OR = "OR"
 const COMMAND = "CMD"
 
 type Token struct {
@@ -31,6 +33,10 @@ func isAnd(b byte) bool {
 	return b == AND_SYMBOL
 }
 
+func isOr(b byte) bool {
+	return b == OR_SYMBOL
+}
+
 func buildAndToken(s string, i int) (Token, error) {
 	j := i + 1
 	if j < len(s) {
@@ -40,6 +46,17 @@ func buildAndToken(s string, i int) (Token, error) {
 		return Token{}, buildLexError(j, '&', s[j])
 	}
 	return Token{}, buildLexError(j, '&', 0)
+}
+
+func buildOrToken(s string, i int) (Token, error) {
+	j := i + 1
+	if j < len(s) {
+		if isOr(s[j]) {
+			return Token{which: OR, column: j}, nil
+		} // else PIPE
+		return Token{}, buildLexError(j, '|', s[j])
+	}
+	return Token{}, buildLexError(j, '|', 0)
 }
 
 func isCommand(b byte) bool {
@@ -72,6 +89,13 @@ func Tokenize(s string) ([]Token, error) {
 				return nil, err
 			}
 			res = append(res, andToken)
+			i += 2
+		case isOr(currentChar):
+			orToken, err := buildOrToken(s, i)
+			if err != nil {
+				return nil, err
+			}
+			res = append(res, orToken)
 			i += 2
 		case isCommand(currentChar):
 			cmdToken, err := buildCommandToken(s, i)

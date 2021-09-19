@@ -11,17 +11,26 @@ type Output struct {
 	out     string
 }
 
-func traverse(ast *AST, outStream io.Writer) (*Output, error) {
+func traverse(ast *AST, outStream io.Writer, errStream io.Writer) (*Output, error) {
 
 	switch ast.which {
 	case AND:
 		{
 
-			out, err := traverse(ast.left, outStream)
+			out, err := traverse(ast.left, outStream, errStream)
 			if !out.success { // sub command failed
 				return out, err
 			} else {
-				return traverse(ast.right, outStream)
+				return traverse(ast.right, outStream, errStream)
+			}
+		}
+	case OR:
+		{
+			out, err := traverse(ast.left, outStream, errStream)
+			if out.success { // sub command failed
+				return out, err
+			} else {
+				return traverse(ast.right, outStream, errStream)
 			}
 		}
 	case COMMAND:
@@ -31,14 +40,17 @@ func traverse(ast *AST, outStream io.Writer) (*Output, error) {
 			commandSucceeded := err == nil
 			if commandSucceeded {
 				outStream.Write(out)
+				return &Output{success: true, out: string(out)}, nil
+			} else {
+				errStream.Write(append([]byte(err.Error()), '\n'))
+				return &Output{success: false, out: string(out)}, nil
 			}
-			return &Output{success: true, out: string(out)}, nil
 		}
 	}
 	return nil, nil
 }
 
 func Interpret(ast *AST) error {
-	_, err := traverse(ast, os.Stdout)
+	_, err := traverse(ast, os.Stdout, os.Stderr)
 	return err
 }
