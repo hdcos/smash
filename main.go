@@ -13,6 +13,9 @@ func main() {
 		fmt.Print("> ")
 		scanner.Scan()
 		command := scanner.Text()
+		if len(command) == 0 {
+			continue
+		}
 		tokens, err := Tokenize(command)
 		if err != nil {
 			fmt.Print(err)
@@ -28,6 +31,7 @@ func main() {
 		}
 
 		fmt.Printf("AST: %+v\n", ast)
-	}
 
+		Interpret(ast)
+	}
 }
