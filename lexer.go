@@ -11,6 +11,7 @@ const OR_SYMBOL = '|'
 const AND = "AND"
 const OR = "OR"
 const COMMAND = "CMD"
+const PIPE = "PIPE"
 
 type Token struct {
 	which  string
@@ -53,8 +54,8 @@ func buildOrToken(s string, i int) (Token, error) {
 	if j < len(s) {
 		if isOr(s[j]) {
 			return Token{which: OR, column: j}, nil
-		} // else PIPE
-		return Token{}, buildLexError(j, '|', s[j])
+		}
+		return Token{which: PIPE, column: j}, nil
 	}
 	return Token{}, buildLexError(j, '|', 0)
 }
@@ -90,13 +91,17 @@ func Tokenize(s string) ([]Token, error) {
 			}
 			res = append(res, andToken)
 			i += 2
-		case isOr(currentChar):
+		case isOr(currentChar): // or PIPE
 			orToken, err := buildOrToken(s, i)
 			if err != nil {
 				return nil, err
 			}
 			res = append(res, orToken)
-			i += 2
+			var padding = 1 // PIPE
+			if orToken.which == OR {
+				padding = 2
+			}
+			i += padding
 		case isCommand(currentChar):
 			cmdToken, err := buildCommandToken(s, i)
 			if err != nil {

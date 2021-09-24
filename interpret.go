@@ -2,6 +2,7 @@ package main
 
 import (
 	"io"
+	"log"
 	"os"
 	"os/exec"
 )
@@ -11,46 +12,101 @@ type Output struct {
 	out     string
 }
 
-func traverse(ast *AST, outStream io.Writer, errStream io.Writer) (*Output, error) {
+type EvalContext struct {
+	outStream  io.Writer
+	errStream  io.Writer
+	lastOutput *Output
+}
+
+func printOutput(cx *EvalContext) {
+	toWrite := []byte(cx.lastOutput.out)
+	if cx.lastOutput.success { // sub command failed
+		cx.outStream.Write(toWrite)
+	} else {
+		cx.errStream.Write(append(toWrite, '\n'))
+	}
+}
+
+func traverse(ast *AST, cx *EvalContext, parent *AST) (*EvalContext, error) {
 
 	switch ast.which {
 	case AND:
 		{
 
-			out, err := traverse(ast.left, outStream, errStream)
-			if !out.success { // sub command failed
-				return out, err
+			cx, err := traverse(ast.left, cx, ast)
+			printOutput(cx)
+			if !cx.lastOutput.success { // sub command failed
+				return cx, err
 			} else {
-				return traverse(ast.right, outStream, errStream)
+				cx, err := traverse(ast.right, cx, ast)
+				printOutput(cx)
+				return cx, err
 			}
 		}
 	case OR:
 		{
-			out, err := traverse(ast.left, outStream, errStream)
-			if out.success { // sub command failed
-				return out, err
+			cx, err := traverse(ast.left, cx, ast)
+			printOutput(cx)
+			if cx.lastOutput.success { // no need to continue since or
+				return cx, err
 			} else {
-				return traverse(ast.right, outStream, errStream)
+				cx, err := traverse(ast.right, cx, ast)
+				printOutput(cx)
+				return cx, err
+			}
+		}
+	case PIPE:
+		{
+			cx, err := traverse(ast.left, cx, ast)
+
+			if cx.lastOutput.success {
+				cx, err := traverse(ast.right, cx, ast)
+				if parent == nil {
+					printOutput(cx)
+				}
+				return cx, err
+			} else {
+				return cx, err
 			}
 		}
 	case COMMAND:
 		{
 			cmd := exec.Command(ast.bin, ast.args...)
+			if parent != nil && parent.which == PIPE && cx.lastOutput != nil {
+				stdin, err := cmd.StdinPipe()
+				if err != nil {
+					log.Fatal(err)
+				}
+
+				go func() {
+					defer stdin.Close()
+					io.WriteString(stdin, cx.lastOutput.out)
+				}()
+			}
 			out, err := cmd.Output()
 			commandSucceeded := err == nil
 			if commandSucceeded {
-				outStream.Write(out)
-				return &Output{success: true, out: string(out)}, nil
+				cx.lastOutput = &Output{success: true, out: string(out)}
 			} else {
-				errStream.Write(append([]byte(err.Error()), '\n'))
-				return &Output{success: false, out: string(out)}, nil
+				cx.lastOutput = &Output{success: false, out: string(err.Error())}
 			}
+			if parent == nil {
+				printOutput(cx)
+			}
+			return cx, nil
 		}
 	}
-	return nil, nil
+	return cx, nil
 }
 
 func Interpret(ast *AST) error {
-	_, err := traverse(ast, os.Stdout, os.Stderr)
+
+	context := &EvalContext{
+		outStream:  os.Stdout,
+		errStream:  os.Stderr,
+		lastOutput: nil,
+	}
+
+	_, err := traverse(ast, context, nil)
 	return err
 }

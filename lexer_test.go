@@ -46,6 +46,17 @@ func TestOr(t *testing.T) {
 	}
 }
 
+func TestPipe(t *testing.T) {
+	typed := " | "
+	tokens, err := Tokenize(typed)
+	if err != nil {
+		t.Error(err)
+	}
+	if len(tokens) != 1 || tokens[0].which != PIPE {
+		t.Error("should tokenize a PIPE")
+	}
+}
+
 func TestCommand(t *testing.T) {
 	typed := "ls"
 	tokens, err := Tokenize(typed)
