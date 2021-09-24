@@ -18,11 +18,11 @@ func main() {
 		}
 		tokens, err := Tokenize(command)
 		if err != nil {
-			fmt.Print(err)
+			fmt.Println(err)
 			continue
 		}
 
-		fmt.Printf("Tokens: %v\n", tokens)
+		fmt.Printf("Tokens:// %v\n", tokens)
 
 		ast, err := BuildAST(tokens)
 		if err != nil {
@@ -30,7 +30,7 @@ func main() {
 			continue
 		}
 
-		fmt.Printf("AST: %+v\n", ast)
+		fmt.Printf("AST:// %#v\n", ast)
 
 		Interpret(ast)
 	}
