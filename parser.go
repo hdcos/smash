@@ -4,14 +4,6 @@ import (
 	"fmt"
 )
 
-type AST struct {
-	left  *AST
-	right *AST
-	which string
-	bin   string
-	args  []string
-}
-
 func SyntaxError(column int, expected string, found string) error {
 	return fmt.Errorf("col[%d]: Expected %s but found %s", column, expected, found)
 }
