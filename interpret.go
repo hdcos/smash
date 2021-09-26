@@ -82,6 +82,8 @@ func traverse(ast *AST, cx *EvalContext, parent *AST) (*EvalContext, error) {
 					defer stdin.Close()
 					io.WriteString(stdin, cx.lastOutput.out)
 				}()
+			} else {
+				cmd.Stdin = os.Stdin
 			}
 			out, err := cmd.Output()
 			commandSucceeded := err == nil
