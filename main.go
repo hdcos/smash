@@ -8,6 +8,14 @@ import (
 	"syscall"
 )
 
+var Debug = false
+
+func debug(prompt string, toDebug interface{}) {
+	if Debug {
+		fmt.Printf("%s %#v\n", prompt, toDebug)
+	}
+}
+
 func main() {
 
 	sigs := make(chan os.Signal, 1)
@@ -40,16 +48,14 @@ func main() {
 		if len(tokens) == 0 {
 			continue
 		}
-
-		fmt.Printf("Tokens:// %v\n", tokens)
+		debug("TOKENS://", tokens)
 
 		ast, err := BuildAST(tokens)
 		if err != nil {
 			fmt.Println(err)
 			continue
 		}
-
-		fmt.Printf("AST:// %#v\n", ast)
+		debug("AST://", ast)
 
 		Interpret(ast)
 	}

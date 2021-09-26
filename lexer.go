@@ -13,12 +13,6 @@ const OR = "OR"
 const COMMAND = "CMD"
 const PIPE = "PIPE"
 
-type Token struct {
-	which  string
-	value  string
-	column int
-}
-
 func buildLexError(position int, expected byte, found byte) error {
 	if found == 0 {
 		return errors.New(fmt.Errorf("expecting char %c at %d but found EOF", expected, position).Error())

@@ -71,6 +71,23 @@ func traverse(ast *AST, cx *EvalContext, parent *AST) (*EvalContext, error) {
 		}
 	case COMMAND:
 		{
+			// builtins
+			if ast.bin == "debug" && len(ast.args) > 0 {
+				switch ast.args[0] {
+				case "on":
+					{
+						Debug = true
+						cx.lastOutput = &Output{success: true, out: "Debug enabled"}
+					}
+				case "off":
+					{
+						Debug = false
+						cx.lastOutput = &Output{success: true, out: "Debug disabled"}
+					}
+				}
+				return cx, nil
+			}
+
 			cmd := exec.Command(ast.bin, ast.args...)
 			if parent != nil && parent.which == PIPE && cx.lastOutput != nil {
 				stdin, err := cmd.StdinPipe()
