@@ -1,6 +1,9 @@
 package main
 
-import "testing"
+import (
+	"reflect"
+	"testing"
+)
 
 func TestBlank(t *testing.T) {
 	typed := "    		"
@@ -63,8 +66,12 @@ func TestCommand(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	if len(tokens) != 1 || tokens[0].which != COMMAND || tokens[0].value != "ls" {
-		t.Error("should tokenize a CMD")
+	expected := []Token{{which: COMMAND, value: "ls", column: 0}}
+
+	if !reflect.DeepEqual(
+		tokens,
+		expected) {
+		t.Errorf("should tokenize a CMD but got %v", tokens)
 	}
 }
 
@@ -74,7 +81,26 @@ func TestCommandWithArguments(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	if len(tokens) != 2 || tokens[0].which != COMMAND || tokens[0].value != "ls" || tokens[1].which != COMMAND || tokens[1].value != "-la" {
-		t.Error("should tokenize a CMD")
+	expected := []Token{{which: COMMAND, value: "ls", column: 0}, {which: COMMAND, value: "-la", column: 3}}
+
+	if !reflect.DeepEqual(
+		tokens,
+		expected) {
+		t.Errorf("should tokenize a CMD but got %v", tokens)
+	}
+}
+
+func TestCommandWithPath(t *testing.T) {
+	typed := "ls ./folder"
+	tokens, err := Tokenize(typed)
+	if err != nil {
+		t.Error(err)
+	}
+	expected := []Token{{which: COMMAND, value: "ls", column: 0}, {which: COMMAND, value: "./folder", column: 3}}
+
+	if !reflect.DeepEqual(
+		tokens,
+		expected) {
+		t.Errorf("should tokenize a CMD but got %v", tokens)
 	}
 }

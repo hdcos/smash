@@ -17,6 +17,18 @@ func TestCmdNode(t *testing.T) {
 	}
 }
 
+func TestCmdNodeWithArguments(t *testing.T) {
+	testTokens := []Token{{column: 0, which: COMMAND, value: "ls"}, {column: 3, which: COMMAND, value: "./folder"}}
+
+	ast, err := BuildAST(testTokens)
+	if err != nil {
+		t.Error(err.Error())
+	}
+	if ast == nil || ast.which != COMMAND {
+		t.Error("should build an AST with ls CMD as root")
+	}
+}
+
 func TestAndLeftEmptyCommand(t *testing.T) {
 	testTokens := []Token{{column: 0, which: AND, value: "&&"}}
 
