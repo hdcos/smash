@@ -91,12 +91,12 @@ func TestCommandWithArguments(t *testing.T) {
 }
 
 func TestCommandWithPath(t *testing.T) {
-	typed := "ls ./folder"
+	typed := "ls ./F_older#"
 	tokens, err := Tokenize(typed)
 	if err != nil {
 		t.Error(err)
 	}
-	expected := []Token{{which: COMMAND, value: "ls", column: 0}, {which: COMMAND, value: "./folder", column: 3}}
+	expected := []Token{{which: COMMAND, value: "ls", column: 0}, {which: COMMAND, value: "./F_older#", column: 3}}
 
 	if !reflect.DeepEqual(
 		tokens,
