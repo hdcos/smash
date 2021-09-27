@@ -29,13 +29,14 @@ func IsBuiltinCommand(value string) bool {
 	return false
 }
 
-func execBuiltin(ast *AST) (*EvalContext, error) {
+func execBuiltin(ast *AST, cx *EvalContext) (*EvalContext, error) {
 	switch ast.bin {
 	case BUILTIN_CD:
 		{
 			dir, err := os.Getwd()
 			if err != nil {
-				return nil, err
+				cx.lastOutput = &Output{success: false, out: string(err.Error())}
+				return cx, err
 			}
 			destination := os.Getenv("HOME")
 			if len(ast.args) > 0 {
@@ -46,13 +47,15 @@ func execBuiltin(ast *AST) (*EvalContext, error) {
 			}
 			err = os.Chdir(destination)
 			if err != nil {
-				return nil, err
+				cx.lastOutput = &Output{success: false, out: string(err.Error())}
+				return cx, err
 			}
 			os.Setenv("OLDPWD", dir)
 			os.Setenv("PWD", destination)
+			cx.lastOutput = &Output{success: true, out: ""}
 		}
 	}
-	return nil, nil
+	return cx, nil
 }
 
 func printOutput(cx *EvalContext) {
@@ -94,23 +97,31 @@ func traverse(ast *AST, cx *EvalContext, parent *AST) (*EvalContext, error) {
 		}
 	case PIPE:
 		{
-			cx, err := traverse(ast.left, cx, ast)
+			var err error = nil
+			cx, _ := traverse(ast.left, cx, ast)
 
 			if cx.lastOutput.success {
-				cx, err := traverse(ast.right, cx, ast)
-				if parent == nil {
-					printOutput(cx)
-				}
-				return cx, err
+				cx, err = traverse(ast.right, cx, ast)
 			} else {
-				return cx, err
+				printOutput(cx)
+				cx.lastOutput.out = ""
+				cx, err = traverse(ast.right, cx, ast)
 			}
+			if parent == nil {
+				printOutput(cx)
+			}
+			return cx, err
 		}
 	case COMMAND:
 		{
 			if IsBuiltinCommand(ast.bin) {
-				return execBuiltin(ast)
+				cx, err := execBuiltin(ast, cx)
+				if parent == nil {
+					printOutput(cx)
+				}
+				return cx, err
 			}
+
 			cmd := exec.Command(ast.bin, ast.args...)
 			if parent != nil && parent.which == PIPE && cx.lastOutput != nil {
 				stdin, err := cmd.StdinPipe()
