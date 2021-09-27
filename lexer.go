@@ -61,7 +61,7 @@ func buildOrToken(s string, i int) (Token, error) {
 }
 
 func isCommand(b byte) bool {
-	return b >= 'a' && b <= 'z' || b >= '0' && b <= '9' || b == '-'
+	return b >= 'a' && b <= 'z' || b >= '0' && b <= '9' || b == '-' || b == '.' || b == '/'
 }
 
 func buildCommandToken(s string, i int) (Token, error) {
