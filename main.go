@@ -23,7 +23,14 @@ func main() {
 	scanner := bufio.NewScanner(os.Stdin)
 
 	for {
-		fmt.Print("> ")
+		dir, err := os.Getwd()
+		if err != nil {
+			os.Stdout.Write([]byte(err.Error()))
+			os.Stderr.Write([]byte(err.Error()))
+			os.Exit(1)
+			break
+		}
+		fmt.Printf("%s> ", dir)
 		ok := scanner.Scan()
 		if !ok {
 			break
@@ -41,15 +48,11 @@ func main() {
 			continue
 		}
 
-		fmt.Printf("Tokens:// %v\n", tokens)
-
 		ast, err := BuildAST(tokens)
 		if err != nil {
 			fmt.Println(err)
 			continue
 		}
-
-		fmt.Printf("AST:// %#v\n", ast)
 
 		Interpret(ast)
 	}
