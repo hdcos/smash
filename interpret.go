@@ -63,7 +63,7 @@ func printOutput(cx *EvalContext) {
 	if cx.lastOutput.success { // sub command failed
 		cx.outStream.Write(toWrite)
 	} else {
-		cx.errStream.Write(append(toWrite, '\n'))
+		cx.errStream.Write(toWrite)
 	}
 }
 
@@ -137,11 +137,16 @@ func traverse(ast *AST, cx *EvalContext, parent *AST) (*EvalContext, error) {
 				cmd.Stdin = os.Stdin
 			}
 			out, err := cmd.Output()
-			commandSucceeded := err == nil
-			if commandSucceeded {
-				cx.lastOutput = &Output{success: true, out: string(out)}
+			commandFailed := cmd.ProcessState.ExitCode() == 1
+			if commandFailed {
+				if err != nil {
+					e := err.(*exec.ExitError)
+					cx.lastOutput = &Output{success: false, out: string(e.Stderr)}
+				} else {
+					cx.lastOutput = &Output{success: false, out: string(err.Error())}
+				}
 			} else {
-				cx.lastOutput = &Output{success: false, out: string(err.Error())}
+				cx.lastOutput = &Output{success: true, out: string(out)}
 			}
 			if parent == nil {
 				printOutput(cx)
