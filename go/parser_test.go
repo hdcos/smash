@@ -61,8 +61,30 @@ func TestAndCommand(t *testing.T) {
 	if err != nil {
 		t.Error(err.Error())
 	}
-	if ast.which != AND || ast.left.bin != "ls" || ast.right.bin != "wc" {
-		t.Error("it should build an ast for ls && wc")
+	var expected = &AST{
+		which: AND,
+		bin:   "",
+		args:  []string{},
+		children: []*AST{
+			{
+				which:    COMMAND,
+				bin:      "ls",
+				args:     []string{},
+				children: []*AST{},
+			},
+			{
+				which:    COMMAND,
+				bin:      "wc",
+				args:     []string{},
+				children: []*AST{},
+			},
+		}}
+
+	if !reflect.DeepEqual(
+		ast,
+		expected,
+	) {
+		t.Errorf("should build AST for ls && wc\n Got: \n Got: %+v", ast)
 	}
 }
 
@@ -84,41 +106,34 @@ func TestMultiAndCommand(t *testing.T) {
 
 	var expected = &AST{
 		which: AND,
-		left: &AST{
-			which: AND,
-			left: &AST{
-				which: COMMAND,
-				left:  nil,
-				right: nil,
-				bin:   "ls",
-				args:  []string{},
+		bin:   "",
+		args:  []string{},
+		children: []*AST{
+			{
+				which:    COMMAND,
+				bin:      "ls",
+				args:     []string{},
+				children: []*AST{},
 			},
-			right: &AST{
-				which: COMMAND,
-				left:  nil,
-				right: nil,
-				bin:   "ls",
-				args:  []string{"-la"},
+			{
+				which:    COMMAND,
+				bin:      "ls",
+				args:     []string{"-la"},
+				children: []*AST{},
 			},
-			bin:  "",
-			args: []string{},
-		},
-		right: &AST{
-			which: COMMAND,
-			left:  nil,
-			right: nil,
-			bin:   "wc",
-			args:  []string{"-l"},
-		},
-		bin:  "",
-		args: []string{},
-	}
+			{
+				which:    COMMAND,
+				bin:      "wc",
+				args:     []string{"-l"},
+				children: []*AST{},
+			},
+		}}
 
 	if !reflect.DeepEqual(
 		ast,
 		expected,
 	) {
-		t.Errorf("should build AST for ls && ls -la && wc -l\n Got: [%s [%s [%s, %s]] [%s]]", ast.which, ast.left.which, ast.left.left.which, ast.left.right.which, ast.right.which)
+		t.Errorf("should build AST for ls && ls -la && wc -l\n Got: %+v", ast)
 	}
 }
 
@@ -161,41 +176,34 @@ func TestMultiOrCommand(t *testing.T) {
 
 	var expected = &AST{
 		which: OR,
-		left: &AST{
-			which: OR,
-			left: &AST{
-				which: COMMAND,
-				left:  nil,
-				right: nil,
-				bin:   "ls",
-				args:  []string{},
+		bin:   "",
+		args:  []string{},
+		children: []*AST{
+			{
+				which:    COMMAND,
+				bin:      "ls",
+				args:     []string{},
+				children: []*AST{},
 			},
-			right: &AST{
-				which: COMMAND,
-				left:  nil,
-				right: nil,
-				bin:   "ls",
-				args:  []string{"-la"},
+			{
+				which:    COMMAND,
+				bin:      "ls",
+				args:     []string{"-la"},
+				children: []*AST{},
 			},
-			bin:  "",
-			args: []string{},
-		},
-		right: &AST{
-			which: COMMAND,
-			left:  nil,
-			right: nil,
-			bin:   "wc",
-			args:  []string{"-l"},
-		},
-		bin:  "",
-		args: []string{},
-	}
+			{
+				which:    COMMAND,
+				bin:      "wc",
+				args:     []string{"-l"},
+				children: []*AST{},
+			},
+		}}
 
 	if !reflect.DeepEqual(
 		ast,
 		expected,
 	) {
-		t.Errorf("should build AST for ls || ls -la || wc -l\n Got: [%s [%s [%s, %s]] [%s]]", ast.which, ast.left.which, ast.left.left.which, ast.left.right.which, ast.right.which)
+		t.Errorf("should build AST for ls || ls -la || wc -l\n Got: %+v", ast)
 	}
 }
 
@@ -214,28 +222,27 @@ func TestPipeCommand(t *testing.T) {
 
 	var expected = &AST{
 		which: PIPE,
-		left: &AST{
-			which: COMMAND,
-			left:  nil,
-			right: nil,
-			bin:   "ls",
-			args:  []string{},
-		},
-		right: &AST{
-			which: COMMAND,
-			left:  nil,
-			right: nil,
-			bin:   "wc",
-			args:  []string{"-l"},
-		},
-		bin:  "",
-		args: []string{},
-	}
+		bin:   "",
+		args:  []string{},
+		children: []*AST{
+			{
+				which:    COMMAND,
+				bin:      "ls",
+				args:     []string{},
+				children: []*AST{},
+			},
+			{
+				which:    COMMAND,
+				bin:      "wc",
+				args:     []string{"-l"},
+				children: []*AST{},
+			},
+		}}
 
 	if !reflect.DeepEqual(
 		ast,
 		expected,
 	) {
-		t.Errorf("should build AST for ls | wc -l\n Got: [%s [%s, %s]]", ast.which, ast.left.which, ast.right.which)
+		t.Errorf("should build AST for ls | wc -l\n Got: [%s %+v]", ast.which, ast.children)
 	}
 }

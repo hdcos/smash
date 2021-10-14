@@ -5,11 +5,10 @@ import (
 )
 
 type AST struct {
-	left  *AST
-	right *AST
-	which string
-	bin   string
-	args  []string
+	children []*AST
+	which    string
+	bin      string
+	args     []string
 }
 
 func SyntaxError(column int, expected string, found string) error {
@@ -17,7 +16,7 @@ func SyntaxError(column int, expected string, found string) error {
 }
 
 func NewNode(which string) *AST {
-	return &AST{which: which, left: nil, right: nil, bin: "", args: []string{}}
+	return &AST{which: which, children: []*AST{}, bin: "", args: []string{}}
 }
 
 func buildCommandNode(tokens []Token) (*AST, error) {
@@ -38,8 +37,6 @@ func buildCommandNode(tokens []Token) (*AST, error) {
 }
 
 func BuildAST(tokens []Token) (*AST, error) {
-	expected := []string{COMMAND}
-
 	var root *AST = nil
 	i := 0
 
@@ -47,44 +44,33 @@ func BuildAST(tokens []Token) (*AST, error) {
 		currentToken := tokens[i]
 		currentTokenType := currentToken.which
 
-		ok := false
-
-		for _, e := range expected {
-			if e == currentTokenType {
-				ok = true
-				break
-			}
-		}
-
-		if !ok {
-			return nil, SyntaxError(currentToken.column, fmt.Sprintf("one of %+v", expected), currentTokenType)
-		}
-
 		switch currentTokenType {
 		case COMMAND:
 			{
 				var remainingTokens = tokens[i:]
-				commandNode, _ := buildCommandNode(remainingTokens)
-				root = commandNode
-				expected = []string{AND, OR, PIPE}
+				commandNode, err := buildCommandNode(remainingTokens)
+				if commandNode == nil {
+					return nil, err
+				}
+
+				if root != nil && (root.which == AND || root.which == OR || root.which == PIPE) {
+					root.children = append(root.children, commandNode)
+				} else {
+					root = commandNode
+				}
 				i += 1 + len(commandNode.args) // BIN + ARGS
 			}
 		case AND, OR, PIPE:
 			{
-				var remainingTokens = tokens[i+1:]
-				if len(remainingTokens) == 0 {
-					return nil, SyntaxError(currentToken.column, fmt.Sprintf("%s to have right operand", currentTokenType), "none")
+				logical := NewNode(currentTokenType)
+				if i+1 >= len(tokens) {
+					return nil, SyntaxError(i+1, "a command", "EOL")
 				}
-				var newRoot *AST = NewNode(currentTokenType)
-				newRoot.left = root
-				rightNode, err := buildCommandNode(remainingTokens)
-				if err != nil {
-					return nil, err
+				if root.which != logical.which {
+					logical.children = append(logical.children, root)
+					root = logical
 				}
-				newRoot.right = rightNode
-				root = newRoot
-				i += 1 + 1 + len(rightNode.args) // AND/OR/PIPE + BIN + ARGS
-				expected = []string{AND, OR, PIPE}
+				i += 1
 			}
 		default:
 			{

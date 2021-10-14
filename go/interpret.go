@@ -7,8 +7,6 @@ import (
 	"os/exec"
 )
 
-const BUILTIN_CD = "cd"
-
 type Output struct {
 	success bool
 	out     string
@@ -19,6 +17,8 @@ type EvalContext struct {
 	errStream  io.Writer
 	lastOutput *Output
 }
+
+const BUILTIN_CD = "cd"
 
 func IsBuiltinCommand(value string) bool {
 	for _, builtin := range []string{BUILTIN_CD} {
@@ -72,44 +72,39 @@ func traverse(ast *AST, cx *EvalContext, parent *AST) (*EvalContext, error) {
 	switch ast.which {
 	case AND:
 		{
-
-			cx, err := traverse(ast.left, cx, ast)
-			printOutput(cx)
-			if !cx.lastOutput.success { // sub command failed
-				return cx, err
-			} else {
-				cx, err := traverse(ast.right, cx, ast)
+			var err error = nil
+			for _, c := range ast.children {
+				cx, err = traverse(c, cx, ast)
 				printOutput(cx)
-				return cx, err
+				if !cx.lastOutput.success { // sub command failed
+					return cx, err
+				}
 			}
+			return cx, err
 		}
 	case OR:
 		{
-			cx, err := traverse(ast.left, cx, ast)
-			printOutput(cx)
-			if cx.lastOutput.success { // no need to continue since or
-				return cx, err
-			} else {
-				cx, err := traverse(ast.right, cx, ast)
+			var err error = nil
+			for _, c := range ast.children {
+				cx, err = traverse(c, cx, ast)
 				printOutput(cx)
-				return cx, err
+				if cx.lastOutput.success { // sub command failed
+					return cx, err
+				}
 			}
+			return cx, err
 		}
 	case PIPE:
 		{
 			var err error = nil
-			cx, _ := traverse(ast.left, cx, ast)
-
-			if cx.lastOutput.success {
-				cx, err = traverse(ast.right, cx, ast)
-			} else {
-				printOutput(cx)
-				cx.lastOutput.out = ""
-				cx, err = traverse(ast.right, cx, ast)
+			for _, c := range ast.children {
+				cx, err = traverse(c, cx, ast)
+				if !cx.lastOutput.success { // sub command failed
+					printOutput(cx)
+					cx.lastOutput.out = ""
+				}
 			}
-			if parent == nil {
-				printOutput(cx)
-			}
+			printOutput(cx)
 			return cx, err
 		}
 	case COMMAND:
@@ -138,12 +133,13 @@ func traverse(ast *AST, cx *EvalContext, parent *AST) (*EvalContext, error) {
 			}
 			out, err := cmd.Output()
 			commandFailed := cmd.ProcessState.ExitCode() == 1
-			if commandFailed {
-				if err != nil {
+			if err != nil {
+				if commandFailed {
 					e := err.(*exec.ExitError)
 					cx.lastOutput = &Output{success: false, out: string(e.Stderr)}
 				} else {
-					cx.lastOutput = &Output{success: false, out: string(err.Error())}
+					e := err.(*exec.Error)
+					cx.lastOutput = &Output{success: false, out: string(e.Error())}
 				}
 			} else {
 				cx.lastOutput = &Output{success: true, out: string(out)}
