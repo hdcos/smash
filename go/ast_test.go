@@ -14,14 +14,16 @@ func TestASTFmt(t *testing.T) {
 }
 
 func TestASTReccursiveFmt(t *testing.T) {
+	lsNode := NewNode(COMMAND)
+	lsNode.bin = "ls"
+	wcNode := NewNode(COMMAND)
+	wcNode.bin = "wc"
+
 	a := NewNode(AND)
-	a.left = NewNode(COMMAND)
-	a.left.bin = "ls"
-	a.right = NewNode(COMMAND)
-	a.right.bin = "wc"
+	a.children = append(a.children, lsNode, wcNode)
 
 	sfmt := a.GoString()
-	if sfmt != "(AND (ls []) (wc []))" {
+	if sfmt != "{AND (ls [])(wc [])}" {
 		t.Error(sfmt)
 	}
 }
