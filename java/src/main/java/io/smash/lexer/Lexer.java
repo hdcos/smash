@@ -28,7 +28,8 @@ public class Lexer {
 
                 if (!isBlank(c)) {
                     if (isAndLexem(c) && isAndLexem(previous)) {
-                        tokens.add(new Token(Lexems.AND, 0, i));
+                        final Token and = new Token(Lexems.AND, 0, i);
+                        tokens.add(and);
                     }
                 }
 
