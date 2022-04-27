@@ -13,6 +13,8 @@ java_library(
         "src/main/java/io/smash/lexer/Lexems.java",
         "src/main/java/io/smash/lexer/Lexer.java",
         "src/main/java/io/smash/lexer/Token.java",
+        "src/main/java/io/smash/lexer/TokenType.java",
+        "src/main/java/io/smash/lexer/UnknownCharException.java",
     ],
     visibility = [
         "//src/main/java/io/smash/client/cmdline:__pkg__",
