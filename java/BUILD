@@ -4,11 +4,14 @@ java_binary(
     name = "smash",
     srcs = ["src/main/java/io/smash/client/cmdline/Smash.java"],
     main_class = "io.smash.client.cmdline.Smash",
-    deps = [":greeter"],
+    deps = [
+        ":lexer",
+        ":parser",
+    ],
 )
 
 java_library(
-    name = "greeter",
+    name = "lexer",
     srcs = [
         "src/main/java/io/smash/lexer/Lexems.java",
         "src/main/java/io/smash/lexer/Lexer.java",
@@ -18,5 +21,19 @@ java_library(
     ],
     visibility = [
         "//src/main/java/io/smash/client/cmdline:__pkg__",
+    ],
+)
+
+java_library(
+    name = "parser",
+    srcs = [
+        "src/main/java/io/smash/parser/AST.java",
+        "src/main/java/io/smash/parser/Parser.java",
+    ],
+    visibility = [
+        "//src/main/java/io/smash/client/cmdline:__pkg__",
+    ],
+    deps = [
+        ":lexer",
     ],
 )
