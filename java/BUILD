@@ -29,6 +29,7 @@ java_library(
     srcs = [
         "src/main/java/io/smash/parser/AST.java",
         "src/main/java/io/smash/parser/Parser.java",
+        "src/main/java/io/smash/parser/SyntaxErrorException.java",
     ],
     visibility = [
         "//src/main/java/io/smash/client/cmdline:__pkg__",
