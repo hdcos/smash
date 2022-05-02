@@ -1,4 +1,4 @@
 package io.smash.lexer;
 
-public final record Token(TokenType which, int lineNumber, int column, CharSequence raw) {
+public final record Token(TokenType which, int line, int column, CharSequence raw) {
 }
