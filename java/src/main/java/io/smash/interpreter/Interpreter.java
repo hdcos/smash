@@ -35,6 +35,9 @@ public class Interpreter {
                 break;
             }
 
+            default: {
+                throw new IOException("Not implemented yet :(");
+            }
         }
 
     }

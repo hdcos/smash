@@ -14,7 +14,9 @@ public class Smash {
     public static void main(String args[]) {
         BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
 
-        while (true) {
+        var exit = false;
+
+        while (!exit) {
             try {
                 System.out.print("$> ");
                 String input = br.readLine();
@@ -28,6 +30,8 @@ public class Smash {
                         System.out.println(parsed);
 
                     Interpreter.exec(parsed);
+                } else {
+                    exit = true;
                 }
 
             } catch (Exception exception) {
@@ -35,5 +39,6 @@ public class Smash {
             }
         }
 
+        System.out.println("\nbye bye (^ .^)/");
     }
 }
