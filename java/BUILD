@@ -5,6 +5,7 @@ java_binary(
     srcs = ["src/main/java/io/smash/client/cmdline/Smash.java"],
     main_class = "io.smash.client.cmdline.Smash",
     deps = [
+        ":interpreter",
         ":lexer",
         ":parser",
     ],
@@ -36,5 +37,19 @@ java_library(
     ],
     deps = [
         ":lexer",
+    ],
+)
+
+java_library(
+    name = "interpreter",
+    srcs = [
+        "src/main/java/io/smash/interpreter/Interpreter.java",
+    ],
+    visibility = [
+        "//src/main/java/io/smash/client/cmdline:__pkg__",
+    ],
+    deps = [
+        ":lexer",
+        ":parser",
     ],
 )

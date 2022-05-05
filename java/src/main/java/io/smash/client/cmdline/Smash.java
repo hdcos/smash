@@ -8,6 +8,7 @@ import io.smash.lexer.Lexer;
 import io.smash.lexer.Token;
 import io.smash.parser.AST;
 import io.smash.parser.Parser;
+import io.smash.interpreter.Interpreter;
 
 public class Smash {
     public static void main(String args[]) {
@@ -15,17 +16,22 @@ public class Smash {
 
         while (true) {
             try {
-                System.out.print("$>");
+                System.out.print("$> ");
                 String input = br.readLine();
 
-                List<Token> tokens = Lexer.tokenize(input);
-                tokens.forEach((t) -> System.out.println(t));
+                if (input != null) {
+                    List<Token> tokens = Lexer.tokenize(input);
+                    tokens.forEach((t) -> System.out.println(t));
 
-                AST parsed = Parser.parse(tokens);
-                System.out.println(parsed.toString());
+                    AST parsed = Parser.parse(tokens);
+                    if (parsed != null)
+                        System.out.println(parsed);
+
+                    Interpreter.exec(parsed);
+                }
 
             } catch (Exception exception) {
-                System.err.println(exception.toString());
+                System.err.println(exception);
             }
         }
 
