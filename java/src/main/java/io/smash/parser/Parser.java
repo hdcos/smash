@@ -20,25 +20,11 @@ public class Parser {
         return commandNode;
     }
 
-    private static AST buildAndOperator(AST root) {
+    private static AST buildOperator(AST root, TokenType type) {
         var children = new ArrayList<AST>();
         children.add(root);
 
-        return new AST(TokenType.AND, new ArrayList<String>(), children);
-    }
-
-    private static AST buildOrOperator(AST root) {
-        var children = new ArrayList<AST>();
-        children.add(root);
-
-        return new AST(TokenType.OR, new ArrayList<String>(), children);
-    }
-
-    private static AST buildPipeOperator(AST root) {
-        var children = new ArrayList<AST>();
-        children.add(root);
-
-        return new AST(TokenType.PIPE, new ArrayList<String>(), children);
+        return new AST(type, new ArrayList<String>(), children);
     }
 
     public static AST parse(List<Token> tokens) throws SyntaxErrorException {
@@ -58,29 +44,11 @@ public class Parser {
             }
 
             switch (currentToken.which()) {
-                case AND: {
-                    if (root.which() != TokenType.AND) {
-                        var newRoot = buildAndOperator(root);
-                        root = newRoot;
-                    } // else just skip this one since it is already chained
-                    expected.clear();
-                    expected.add(TokenType.CMD);
-                    break;
-                }
-
+                case AND:
+                case PIPE:
                 case OR: {
-                    if (root.which() != TokenType.OR) {
-                        var newRoot = buildOrOperator(root);
-                        root = newRoot;
-                    } // else just skip this one since it is already chained
-                    expected.clear();
-                    expected.add(TokenType.CMD);
-                    break;
-                }
-
-                case PIPE: {
-                    if (root.which() != TokenType.PIPE) {
-                        var newRoot = buildPipeOperator(root);
+                    if (root.which() != TokenType.AND) {
+                        var newRoot = buildOperator(root, currentToken.which());
                         root = newRoot;
                     } // else just skip this one since it is already chained
                     expected.clear();
